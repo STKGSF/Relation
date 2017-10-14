@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Character relation</title>
+    <script type="text/javascript" src="relation.js" charset="utf-8"></script>
+
+    <style>
+    .character-dialog {
+        position: absolute; left: calc(50% - 150px); 
+        top: 4em; display: none; width: 300px; background-color: rgba(242, 242, 242, 0.8); 
+        border-radius: 4px; box-shadow: 0px 0px 600px; z-index: 10; font-size: 24px;
+    }
+        .character-dialog label {display:block;}
+        .character-dialog .form-group {margin-top:16px; padding:0 8px;} 
+        .character-dialog .form-group:last-child {border-top:1px solid #999; padding: 0px;} 
+        .character-dialog input {
+            display:block; 
+            width:calc(100% - 6px); 
+            line-height:18px;
+            padding:5px;
+            box-sizing:border-box;
+        } 
+        .character-dialog textarea {
+            display:block; 
+            width:calc(100% - 6px); 
+            max-width:calc(100% - 6px);
+            min-width:calc(100% - 6px);
+            padding:5px;box-sizing:border-box;
+        } 
+        .character-dialog button {
+            display:inline-block;
+            margin:0;height:32px;
+            line-height:32px;
+            width:48%;
+            border:none;
+            background-color:transparent;
+            color:#0e90d2;
+            font-size:16px; 
+            border-right:1px solid #999;
+            box-sizing: border-box;
+        } 
+        .character-dialog button:focus {background-color:#d4d4d4; outline:none;} 
+        .character-dialog button:last-child {border-right:none;}
+    </style>
+</head>
+<body>
+<div>
+    <canvas id="demo"></canvas>
+</div>
+<div class="character-dialog">
+    <form>
+        <div class="form-group">
+            <label>name:<input name="cname"></label>
+        </div>
+        <div class="form-group">
+            <label>category:<input name="category"></label>
+        </div>
+        <div class="form-group">
+            <label>desc:<textarea name="desc" rows="6"></textarea></label>
+        </div>
+        <div class="form-group">
+            <button type="button" ok-btn="">OK</button>
+            <button type="button" cancel-btn="">Cancel</button>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    var rc = new RelationChart("#demo",{style:"background-color:#DDD;display:block;margin:0 auto;"});
+    var characters = [
+        {id:'No.1',desc:"Character No.1",name:'C01'},
+        {id:'No.2',desc:"Character No.2",name:'C02'},
+        {id:'No.3',desc:"Character No.3",name:'C03'},
+        {id:'No.4',desc:"Character No.4",name:'C04'},
+        {id:'No.5',desc:"Character No.5",name:'C05'}
+    ];
+    rc.addCharacter(characters);
+    rc.addCharacter({desc:"Character No.6",name:'C06'});
+    rc.addRelation("C01","C02","Test relation");
+    rc.addRelation("C01","C03","Test relation2");
+
+    document.getElementById('demo').ondblclick = function(event) {
+        characterDialog.style.display = 'block';
+    }
+    var characterDialog = document.querySelector('.character-dialog');
+    var nameElement = document.querySelector('.character-dialog input[name="cname"]');
+    var categoryElement = document.querySelector('.character-dialog input[name="category"]');
+    var descElement = document.querySelector('.character-dialog textarea[name="desc"]');
+
+    let okBtn = document.querySelector('.character-dialog button[ok-btn]');
+    okBtn.onclick = function(event) {
+        characterDialog.style.display = 'none';
+        let character = {};
+        character.name = nameElement.value;
+        if(character.name != "") {
+            for (var i = rc.characters.length - 1; i >= 0; i--) {
+                if(rc.characters[i].name == character.name) {
+                    console.log('character is already exists.');
+                    return;
+                }
+            }
+            character.category = categoryElement.value;
+            character.desc = descElement.value;
+            rc.addCharacter(character);
+        }
+    }
+    let cancelBtn = document.querySelector('.character-dialog button[cancel-btn]');
+    cancelBtn.onclick = function(event) {
+        characterDialog.style.display = 'none';
+    }
+</script>
+</body>
+</html>
