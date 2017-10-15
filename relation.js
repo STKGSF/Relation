@@ -5,9 +5,9 @@ var RelationChart = function(selector,options) {
         selector:null,
         canvasWith:600,
         canvasHeight:800,
+        // canvas style
         style:'',
-
-        behavior : new CircleBehavior()
+        drawStyle:{}
     };
     this.characters = [];
     this.relations = [];
@@ -29,6 +29,8 @@ var RelationChart = function(selector,options) {
     me.ctx.lineWidth = 4;
     me.ctx.fillStyle = '#333';
 
+    this.setBehavior(new CircleBehavior(this.options.drawStyle));
+
     me._animationID = -1;
 
     // canvas event handle
@@ -38,7 +40,7 @@ var RelationChart = function(selector,options) {
         me.isMouseDown = true;
         for (let i in me.characters) {
             let pos = me.windowToCanvas(me.canvas,event.clientX,event.clientY);
-            if (me.options.behavior.isIn(pos.x,pos.y,me.characters[i])) {
+            if (me.behavior.isIn(pos.x,pos.y,me.characters[i])) {
                 console.log(me.characters[i].name+" be clicked.");
                 me.selectedCharacter = me.characters[i];
                 me.mouse.pos={x:event.clientX,y:event.clientY};
@@ -140,20 +142,23 @@ RelationChart.prototype = {
         return {x:(x-bbox.left)*(canvas.width/bbox.width),y:(y-bbox.top)*(canvas.height/bbox.height)};
     },
 
+    setBehavior : function (behavior) {
+        this.behavior = behavior;
+    },
+
     draw: function (time) {
         if(this.isUpdated) {
-            let ctx = this.ctx;
-            ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+            this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
             
             let pos1 = {}, pos2={};
             for(var k in this.relations) {
                 pos1 = {x:this.relations[k].src.x, y:this.relations[k].src.y};
                 pos2 = {x:this.relations[k].dst.x, y:this.relations[k].dst.y};
-                this.options.behavior.drawRelation(ctx, pos1, pos2, this.relations[k].desc);
+                this.behavior.drawRelation(this.ctx, pos1, pos2, this.relations[k].desc);
             }
 
             for (let j in this.characters) {
-                this.options.behavior.drawCharacter(ctx, this.characters[j]);
+                this.behavior.drawCharacter(this.ctx, this.characters[j]);
             }
 
             this.isUpdated = false;
@@ -172,32 +177,53 @@ RelationChart.defaultTheme = {
     categorys : []
 }
 
-var CircleBehavior = function () {
-    // body...
+var CircleBehavior = function (style) {
+    // context style 
+    this.style = {
+        characterFont : '18px SimSun',
+        characterFontColor : '#FFFFFF',
+        characterBackgroupColor : '18px SimSun',
+        characterStrokeStyle : '#2d78f4',
+        characterFillStyle : '#3385ff',
+        characterLineWidth : 4,
+
+        relationTextBaseline : 'middle',
+        relationStrokeStyle : '#376956',
+        relationFillStyle : '#DEA681',
+        relationLineWidth : 4,
+    }
+    for (var i in this.style) {
+        if(style[i] != undefined) {
+            this.style[i] = style[i];
+        }
+    }
 };
 CircleBehavior.prototype = {
     drawCharacter : function (context,character) {
-        context.strokeStyle = '#2d78f4';
-        context.fillStyle = '#3385ff';
+        context.strokeStyle = this.style.characterStrokeStyle;
+        context.fillStyle = this.style.characterFillStyle;
+        context.lineWidth = this.style.characterLineWidth;
         context.beginPath();
         context.arc(character.x,character.y,character.radius,0,2*Math.PI);
         context.fill();
         context.stroke();
-        context.fillStyle = '#FFFFFF';
+        context.fillStyle = this.style.characterFontColor;
+        context.textBaseline = 'middle';
         context.fillText(character.name,character.x,character.y);
     },
     drawRelation : function (context,pos1,pos2,desc) {
         context.beginPath();
-        context.strokeStyle = '#376956';
+        context.strokeStyle = this.style.relationStrokeStyle;
         context.moveTo(pos1.x,pos1.y);
         context.lineTo(pos2.x,pos2.y);
         context.stroke();
-        context.fillStyle = '#DEA681';
+        context.fillStyle = this.style.relationFillStyle;
+        context.textBaseline = this.style.relationTextBaseline;
         context.fillText(desc,(pos1.x+pos2.x)/2,(pos1.y+pos2.y)/2);
     },
     isIn : function (x,y,character) {
-        var x = Math.abs(character.x-x);
-        var y = Math.abs(character.y-y);
-        return (x*x+y*y)<character.radius*character.radius;
+        var x = character.x-x;
+        var y = character.y-y;
+        return (x*x+y*y) < character.radius*character.radius;
     }
 }
